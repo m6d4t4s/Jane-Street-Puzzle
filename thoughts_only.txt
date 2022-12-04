@@ -1,0 +1,124 @@
+Jane Street Puzzle: Die Agony; December 2022
+
+key words from problem statement: 
+    
+    starts with score of 0; every nth move, score += n*value; 
+value is the number on die after move; 
+die is only allowed to move into square if its score after the move matches the value in the square.
+die cannot be translated or rotated in place in addition to these moves. 
+answer to puzzle (ans) is the sum of values in the unvisited squares from the dies journey. 
+
+thoughts: 
+
+    for the six-sided die, opposite faces sum to 7 (key presupposition to solve problem). 
+So, since we're starting at 0 in the lower-left hand corner, 
+the first step is up to 5 (Problem Solvling Technique: solve a smaller problem).
+The face up will be 5 since score(1)= 0 + 1*5; the pair face will be 2-5 (since 2+5=7)
+side question: how would we represent die in data structure? Array? Will come back to this.
+how do we determine where the 4-3 and 6-1 pairs face? 
+judging from the orthogonal options available (-7, 23); the 4-3, 6-1 pairs paradigm doesn't allow a next move;
+perhaps there are different numbers other than standard 1-6 die? But, pairs still sum to 7 (key consraint)
+Suppose we moved to 23, the face of the number would have to be 9 (since score(2) = score(1) + 2*9)
+If the face is 9, then the pair would be -2. 
+So far, we have die = [2, 5, -2, 9, ?, ?] representing the opposite-face pairs. 
+Our next orthogonal options are (2, -4, 77); below are the corresponding pairs for each scenario:
+Remember: (x,y) where x+y=7.
+1) 77: (18, 11)[77=23+3*x]
+2) 2: (-7, 14)[2=23+3*x]
+3) -4: (-9, 16)[-4=23+3*x]
+Looking at these numbers, the negative values are too large given the fact that most of the numbers are 
+large and positive. 
+
+Suppose we took a different route; we still have 5-2 pair, but we go to -7 instead of 23 (from 5). 
+If that's the case, then -7 = 5 + 2*x -> x = -6; then (-6, 13)
+
+pairs_new = [2, 5, -6, 13, ?, ?]
+From -7, let's say we go to 2 (186 seems too large); then 2 = -7 + 3*x
+then, x = 3 -> (3, 4). 
+If that's the case, then 
+pairs_new = [2, 5, -6, 13, 3, 4]
+Considering we have the prime numbers 2, 3, 5 and 13 in pairs_new, and given the 
+prime factorization theorem of mathematics, it appears that pairs_new will be the die we go with. 
+
+To recap, we were told that we have a 6 sided die in the problem statement. 
+I don't have an interviewer to ask clarifying questions to, so I did some research
+and realized that opposite faces on a die sum to 7. I did not know that beforehand. 
+Then, solved a smaller problem by taking initial orthogonal steps to construct hypothetical die. 
+
+So, my constructed die that I am going to use initially to solve problem 
+is numbers = [2, 5, -6, 13, 3, 4]. Again, it seems more plausible given lower frequency 
+of large, negative numbers in the array compared to the other 3 options. 
+
+To give context on die, I created a cube, origami to help visualize the cube and 
+think of a way to represent die in data structure. Trying to find a pattern. 
+
+1st roll)
+The die starts with 13 facing up at array[5][0]
+2 is facing array[4][0] (aka north)
+4 is facing array[5][1] (aka east)
+the die rolls onto 5. 
+
+2nd roll)
+5 facing up
+4 to east
+13 to north
+the die rolls onto -7
+
+3rd roll)
+-6 facing up
+4 to east
+5 to north
+the die rolls onto 2
+
+4th roll)
+3 facing up
+-6 to east
+5 to north
+etc. 
+
+key words (more):
+    we have to return the sum of all values of the unvisited squares from the 
+    die's journey. My interpretation is that we add orthogonal square values (there's 4 of them:
+    up, down, left, right) that we didn't visit to Hash Set (since they can't repeat), and 
+    sum all the values in Hash Set. 
+    I am assuming the problem statement doesn't mean to sum all the values in the 2-D matrix that are
+    not on the path towards 732. 
+    Suppose we finished at 2 (on array[3][1] after the 3rd roll), then the HashSet
+    would be (77, 23, 186). So we would return, 286 as our answer. We would 
+    not sum all the squares except values 0, 5, -7, and 2, and return that as our answer. 
+    That's how I interpret the problem statement.
+
+variables for algorithm: 
+    start at array[3][1] (since this is the path we used to determine die)
+    "score_previous": initialize to array[3][1]
+    "score_next": would equal score_previous + n*value
+    "n": determine which move
+    "i, j": array[i][j]
+    numbers:
+        the numbers will be represented with directions
+            1) north
+            2) south
+            3) east
+            4) west
+            5) up
+            6) down
+        these numbers will be initialized based on configuration at array[3][1]
+        will be updated after each move
+    "value": value of number on die
+    "hashSet_notVisited": intially empty; numbers added to path that aren't visited. 
+    "hashSet_Visited": intially empty; numbers added to path that are visited. 
+    "target": set to 732 and break loop once reached and return sum of all values in 
+    hashSet
+
+steps for algorithm:
+    use while loop to stay within array
+    check step:
+         i+1: use north as value
+         i-1: use south as value
+         j+1: use west as value
+         j-1: use east as value
+    
+    if value in square equals score after move, 
+        move onto square and append unvisted orthogonal values into hashSet_notVisited
+    repeat until we reach target
+    return sum of values in hashSet_notVisited
